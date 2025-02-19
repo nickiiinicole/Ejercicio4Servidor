@@ -16,8 +16,9 @@ namespace Ejercicio4Servidor
         string[] users;
         List<string> waitQueue = new List<string>();// rEVISAR PUERTO OCUPADO. Admon se queda conectado. isadmin noppuede ser global. No puede haber usuarios repetidos en wait. Elinia de mas en la cola 
         int port;
+        const int defaultPort = 31416;
         const int portFinal = 65535;
-        const int portInitial = 49664;
+        const int portInitial = 1024;
         Socket serverSocket;
         Socket clientSocket;
         int pinUser = 1;
@@ -39,7 +40,7 @@ namespace Ejercicio4Servidor
             }
             Console.WriteLine($"Using port: {port}");
             ReadNames("usuarios.txt");
-
+            LoadWaitQueue("waitQueue.txt");
             //2ºcreo la ip-puerto
             IPEndPoint ie = new IPEndPoint(IPAddress.Any, port);
             //3ºcreo sockey
@@ -74,7 +75,8 @@ namespace Ejercicio4Servidor
             Socket clientSocket = socket as Socket;
             IPEndPoint ieClient = clientSocket.RemoteEndPoint as IPEndPoint;
             bool isAdmin = false;
-            string command = null;
+
+            bool isExit = false;
             string username = "";
 
 
@@ -91,19 +93,25 @@ namespace Ejercicio4Servidor
                     //pido el nombre de usuario
                     username = sr.ReadLine();
 
+                    //revisar el ref de isAdmin 
                     if (string.IsNullOrEmpty(username) || !CheckInList(username, ref isAdmin))
                     {
                         sw.WriteLine("Unknown user disconnecting");
                         sw.Flush();
                         Console.WriteLine("unkown user disconnecting...");
                         clientSocket.Close();
+                        return;
                     }
+
+
 
                     //si es admin , se le pide un pin 
                     timeConnection = DateTime.Now.ToString("HH:mm:ss");
+                    // Si es admin, solicitar PIN
                     if (isAdmin)
                     {
                         sw.WriteLine("Enter PIN:");
+                        sw.Flush();
                         if (!int.TryParse(sr.ReadLine(), out int pinUser))
                         {
                             sw.WriteLine("Invalid PIN format, disconnecting.");
@@ -119,100 +127,175 @@ namespace Ejercicio4Servidor
                         if (pinUser != pinPassword)
                         {
                             sw.WriteLine("Wrong PIN, disconnecting.");
+                            sw.Flush();
                             clientSocket.Close();
                             return;
                         }
                     }
+                    timeConnection = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                    command = sr.ReadLine();
-                    while (isAdmin)
+                    // Procesar comandos mediante switch
+                    if (isAdmin)
                     {
-                        if (command != null)
+                        bool exitAdmin = false;
+                        while (!exitAdmin)
                         {
-                            //para que no sea null
-                            commandParts = command.Split(' ');
+                            sw.WriteLine("Enter command: (add,list,del pos, chpin pin, exit, shutdown)");
+                            sw.Flush();
+                            string command = sr.ReadLine();
+                            if (string.IsNullOrEmpty(command))
+                            {
+                                clientSocket.Close();
+                                return;
+                            }
+                            string[] commandParts = command.Split(' ');
+
                             switch (command)
                             {
                                 case "list":
-                                    //listado de alumnos en espera 
-                                    sw.WriteLine($"Wait Queue:");
+                                    sw.WriteLine("Wait Queue:");
                                     sw.Flush();
                                     lock (this)
                                     {
-                                        foreach (string student in waitQueue)
+                                        for (int i = 0; i < waitQueue.Count; i++)
                                         {
-                                            sw.WriteLine($"-{student}");
+                                            sw.WriteLine($"{i} - {waitQueue[i]}");
                                             sw.Flush();
                                         }
                                     }
                                     break;
+
                                 case "add":
-                                    //añade al usuario actual al final de la lista waitQueue
                                     lock (this)
                                     {
-                                        if (!waitQueue.Any(userWait => userWait.StartsWith(username + "-")))
+                                        if (!waitQueue.Any(item => item.StartsWith(username + "-")))
                                         {
-                                            StringBuilder userQueue = new StringBuilder();
-                                            userQueue.Append($"{username}-{DateTime.Now}, {timeConnection}");
-
-                                            waitQueue.Add(userQueue.ToString());
-
-                                            sw.WriteLine("OK user added");
+                                            string entry = $"{username}-{timeConnection}";
+                                            waitQueue.Add(entry);
+                                            sw.WriteLine("OK");
                                             sw.Flush();
                                         }
                                         else
                                         {
-                                            sw.WriteLine("user already exist");
+                                            sw.WriteLine("User already exists in the wait queue.");
                                             sw.Flush();
                                         }
                                     }
                                     break;
-                                // ponemos string _ porque es una varibale auxiliar como haycemos con el tryparse 
-                                case string _ when isAdmin && commandParts.Length == 2 && command.StartsWith("del"):
-                                    int pos;
-                                    lock (this)
+
+                                // pattern matching en el case para comandos con parámetros, como del tryparse
+                                case string s when s.StartsWith("del"):
+                                    if (commandParts.Length == 2 && int.TryParse(commandParts[1], out int pos))
                                     {
-                                        if (int.TryParse(commandParts[1], out pos) && pos < waitQueue.Count && pos > 0)
+                                        lock (this)
                                         {
-                                            waitQueue.RemoveAt(pos);
-                                            sw.WriteLine("user deleted");
+                                            if (pos >= 0 && pos < waitQueue.Count)
+                                            {
+                                                waitQueue.RemoveAt(pos);
+                                                sw.WriteLine("User deleted.");
+                                                sw.Flush();
+                                            }
+                                            else
+                                            {
+                                                sw.WriteLine("delete error");
+                                                sw.Flush();
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        sw.WriteLine("delete error");
+                                        sw.Flush();
+                                    }
+                                    break;
+
+                                case string s when s.StartsWith("chpin"):
+                                    if (commandParts.Length == 2 &&
+                                        int.TryParse(commandParts[1], out int newPin) && newPin >= 1000)
+                                    {
+                                        if (SavePin("pin.bin", newPin))
+                                        {
+                                            sw.WriteLine("PIN saved.");
                                             sw.Flush();
                                         }
                                         else
                                         {
-                                            sw.WriteLine("delete error");
+                                            sw.WriteLine("error saving PIN");
                                             sw.Flush();
                                         }
                                     }
-                                    break;
-                                case string _ when isAdmin && commandParts.Length == 2 && command.StartsWith("chpin"):
-                                    if (!int.TryParse(commandParts[1], out pinUser) || !SavePin("pin.bin", pinUser))
+                                    else
                                     {
                                         sw.WriteLine("error saving PIN");
                                         sw.Flush();
                                     }
-                                    else
-                                    {
-                                        sw.WriteLine("PIN saved");
-                                        sw.Flush();
-                                    }
-                                    break;
-                                case "exit" when isAdmin:
-                                    isAdmin = false;
-                                    clientSocket.Close();
                                     break;
 
-                                case "shutdown" when isAdmin:
+                                case "exit":
+                                    sw.WriteLine("Disconnecting admin.");
+                                    sw.Flush();
+                                    exitAdmin = true;
+                                    break;
+
+                                case "shutdown":
                                     SaveWaitQueue("waitQueue.txt");
+                                    sw.WriteLine("Shutting down server.");
+                                    sw.Flush();
                                     clientSocket.Close();
                                     serverSocket.Close();
-                                    break;
+                                    return;
+
                                 default:
+                                    sw.WriteLine("Unknown command.");
+                                    sw.Flush();
                                     break;
                             }
                         }
                     }
+                    else // Usuario normal
+                    {
+                        sw.WriteLine("Enter command:");
+                        string command = sr.ReadLine();
+                        switch (command)
+                        {
+                            case "list":
+                                sw.WriteLine("Wait Queue:");
+                                lock (this)
+                                {
+                                    for (int i = 0; i < waitQueue.Count; i++)
+                                    {
+                                        sw.WriteLine($"{i} - {waitQueue[i]}");
+                                        sw.Flush();
+                                    }
+                                }
+                                break;
+
+                            case "add":
+                                lock (this)
+                                {
+                                    if (!waitQueue.Any(item => item.StartsWith(username + "-")))
+                                    {
+                                        string entry = $"{username}-{timeConnection}";
+                                        waitQueue.Add(entry);
+                                        sw.WriteLine("OK");
+                                        sw.Flush();
+                                    }
+                                    else
+                                    {
+                                        sw.WriteLine("User already exists in the wait queue.");
+                                        sw.Flush();
+                                    }
+                                }
+                                break;
+
+                            default:
+                                sw.WriteLine("Unknown command.");
+                                sw.Flush();
+                                break;
+                        }
+                    }
                 }
+                clientSocket.Close();
 
             }
             catch (Exception e) when (e is SocketException | e is IOException | e is ArgumentException)
@@ -280,6 +363,10 @@ namespace Ejercicio4Servidor
 
         public int GetPortAvailable()
         {
+            if (CheckPort(defaultPort))
+            {
+                return defaultPort;
+            }
 
             for (int i = portInitial; i < portFinal; i++)
             {

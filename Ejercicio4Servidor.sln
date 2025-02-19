@@ -5,6 +5,8 @@ VisualStudioVersion = 17.11.35431.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ejercicio4Servidor", "Ejercicio4Servidor\Ejercicio4Servidor.csproj", "{81B8C62F-DCD6-4E2E-88B7-ADBBDA7BB378}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClienteGraficoServidor", "ClienteGraficoServidor\ClienteGraficoServidor.csproj", "{CDAFD2EF-A681-4A92-9472-4AB33299DC88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{81B8C62F-DCD6-4E2E-88B7-ADBBDA7BB378}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81B8C62F-DCD6-4E2E-88B7-ADBBDA7BB378}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81B8C62F-DCD6-4E2E-88B7-ADBBDA7BB378}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDAFD2EF-A681-4A92-9472-4AB33299DC88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDAFD2EF-A681-4A92-9472-4AB33299DC88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDAFD2EF-A681-4A92-9472-4AB33299DC88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDAFD2EF-A681-4A92-9472-4AB33299DC88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,7 +11,7 @@ namespace Ejercicio4Servidor
         static void Main(string[] args)
         {
             ShiftServer server = new ShiftServer();
-            server.LoadWaitQueue("waitQueue.txt");
+           
             server.Init();
         }
     }
