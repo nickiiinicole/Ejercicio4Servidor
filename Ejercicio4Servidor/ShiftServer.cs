@@ -14,7 +14,7 @@ namespace Ejercicio4Servidor
     internal class ShiftServer
     {
         string[] users;
-        List<string> waitQueue = new List<string>();// rEVISAR PUERTO OCUPADO. Admon se queda conectado. isadmin noppuede ser global. No puede haber usuarios repetidos en wait. Elinia de mas en la cola 
+        List<string> waitQueue = new List<string>();
         int port;
         const int defaultPort = 31416;
         const int portFinal = 65535;
@@ -88,7 +88,7 @@ namespace Ejercicio4Servidor
                 using (StreamWriter sw = new StreamWriter(ns))
                 {
                     isAdmin = false;
-                    sw.WriteLine("Welcome to Nicky's Server\r\nIntroduce your username :D");
+                    sw.WriteLine("Welcome to Nicky's Server. Introduce your username :D");
                     sw.Flush();
                     //pido el nombre de usuario
                     username = sr.ReadLine();
@@ -184,7 +184,7 @@ namespace Ejercicio4Servidor
                                     break;
 
                                 // pattern matching en el case para comandos con parámetros, como del tryparse
-                                case string s when s.StartsWith("del"):
+                                case string s when s.StartsWith("del "):
                                     if (commandParts.Length == 2 && int.TryParse(commandParts[1], out int pos))
                                     {
                                         lock (this)
@@ -209,7 +209,7 @@ namespace Ejercicio4Servidor
                                     }
                                     break;
 
-                                case string s when s.StartsWith("chpin"):
+                                case string s when s.StartsWith("chpin "):
                                     if (commandParts.Length == 2 &&
                                         int.TryParse(commandParts[1], out int newPin) && newPin >= 1000)
                                     {
@@ -255,6 +255,7 @@ namespace Ejercicio4Servidor
                     else // Usuario normal
                     {
                         sw.WriteLine("Enter command:");
+                        sw.Flush();
                         string command = sr.ReadLine();
                         switch (command)
                         {
