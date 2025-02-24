@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -13,13 +14,16 @@ using System.Windows.Forms;
 
 namespace ClienteGraficoServidor
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form//Guardar config
     {
         public int port = 31416;
         public string ipServer = "127.0.0.1";
+        private readonly string configFilePath = Path.Combine(Environment.GetEnvironmentVariable("userprofile"), "config.txt");
+        private string[] data;
         public Form1()
         {
             InitializeComponent();
+            LoadData();
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -62,11 +66,11 @@ namespace ClienteGraficoServidor
                     sw.Flush();
 
                     //leo el mesnaje del comando 
-               
+
                     //leo la respuesta de waitQueue
                     lblServer.Text = $"{sr.ReadToEnd()}";
                     //leo final 
-                    
+
                 }
             }
             catch (Exception e) when (e is IOException | e is SocketException | e is ArgumentException)
@@ -77,6 +81,33 @@ namespace ClienteGraficoServidor
 
         }
 
+        private void LoadData()
+        {
+            if (!File.Exists(configFilePath))
+            {
+                return;
+            }
+            try
+            {
+                using (StreamReader reader = new StreamReader(configFilePath))
+                {
+                    data = reader.ReadToEnd().Split(':');
+                }
+                if (data.Length == 2)
+                {
+                    ipServer = data[0];
+
+                    port = int.TryParse(data[1], out port) ? port : 31416;
+
+                }
+            }
+            catch (Exception e) when (e is IOException | e is FileNotFoundException | e is ArgumentException)
+            {
+
+                Console.WriteLine(e.Message);
+            }
+
+        }
         private void btnAdd_Click(object sender, EventArgs e)
         {
             lblServer.Text = "";
