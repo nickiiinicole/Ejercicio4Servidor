@@ -77,8 +77,6 @@ namespace ClienteGraficoServidor
             {
                 Console.WriteLine(e.Message);
             }
-
-
         }
 
         private void LoadData()
@@ -97,7 +95,8 @@ namespace ClienteGraficoServidor
                 {
                     ipServer = data[0];
 
-                    port = int.TryParse(data[1], out port) ? port : 31416;
+                    port = int.TryParse(data[1], out int parseport) ? parseport : 31416;
+
 
                 }
             }
