@@ -24,6 +24,8 @@ namespace ClienteGraficoServidor
         {
             InitializeComponent();
             this.formClient = form;
+            txtBoxIP.Text = formClient.ipServer;
+            txtBoxPort.Text = formClient.port.ToString();
 
         }
 
@@ -60,7 +62,7 @@ namespace ClienteGraficoServidor
             {
                 using (StreamWriter writer = new StreamWriter(configFilePath))
                 {
-                    writer.WriteLine($"{txtBoxIP.Text}:{txtBoxPort.Text}");
+                    writer.Write($"{txtBoxIP.Text}:{txtBoxPort.Text}:{formClient.txtBoxUser.Text}");
                 }
             }
             catch (Exception e) when (e is IOException | e is ArgumentException)

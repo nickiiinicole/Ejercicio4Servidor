@@ -149,7 +149,7 @@
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
-        private System.Windows.Forms.TextBox txtBoxUser;
+        public System.Windows.Forms.TextBox txtBoxUser;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.Button btnList;
         private System.Windows.Forms.Label label1;

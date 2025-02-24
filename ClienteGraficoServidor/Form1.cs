@@ -57,7 +57,8 @@ namespace ClienteGraficoServidor
                     //mensaje de bienivendia
                     lblServer.Text = $"{sr.ReadLine()}";
                     //mandas el nombre del usaurio
-                    sw.WriteLine(txtBoxUser.Text);
+                    //al mandar el usuario si accedo desde una rchivo a lo mejor tiene un retorno de cargo .. enotces tenemos que qiotarlo
+                    sw.WriteLine(txtBoxUser.Text.TrimEnd('\r', '\n'));
                     sw.Flush();
                     //leo respuesta verificar usyario
                     lblServer.Text = $"{sr.ReadLine()}";
@@ -91,11 +92,13 @@ namespace ClienteGraficoServidor
                 {
                     data = reader.ReadToEnd().Split(':');
                 }
-                if (data.Length == 2)
+                if (data.Length == 3)
                 {
                     ipServer = data[0];
 
                     port = int.TryParse(data[1], out int parseport) ? parseport : 31416;
+
+                    txtBoxUser.Text = data[2];
 
 
                 }
